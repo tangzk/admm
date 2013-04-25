@@ -1,4 +1,4 @@
-package com.intentmedia.bfgs;
+package com.intentmedia.admm;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -54,8 +54,10 @@ public class WholeFileRecordReader implements RecordReader<LongWritable, Text> {
             byte b3 = fileIn.readByte();
             byte b2 = fileIn.readByte();
             byte b1 = fileIn.readByte();
-            int fileLength =
-                    ((b1 & BITWISE_AND_VALUE) << B1_OFFSET) | ((b2 & BITWISE_AND_VALUE) << B2_OFFSET) | ((b3 & BITWISE_AND_VALUE) << B3_OFFSET) | (b4 & BITWISE_AND_VALUE);
+            int fileLength = ((b1 & BITWISE_AND_VALUE) << B1_OFFSET) |
+                             ((b2 & BITWISE_AND_VALUE) << B2_OFFSET) |
+                             ((b3 & BITWISE_AND_VALUE) << B3_OFFSET) |
+                             (b4 & BITWISE_AND_VALUE);
             end = start + fileLength;
             fileIn.seek(0);
             in = new LineReader(codec.createInputStream(fileIn), job);

@@ -1,4 +1,4 @@
-package com.intentmedia.bfgs;
+package com.intentmedia.admm;
 
 import com.intentmedia.bfgs.optimize.BFGS;
 import com.intentmedia.bfgs.optimize.IOptimizer;
@@ -156,3 +156,4 @@ public class AdmmIterationMapper extends MapReduceBase
         }
     }
 }
+

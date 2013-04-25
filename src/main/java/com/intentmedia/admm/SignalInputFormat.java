@@ -1,4 +1,4 @@
-package com.intentmedia.bfgs;
+package com.intentmedia.admm;
 
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -49,3 +49,4 @@ public class SignalInputFormat extends FileInputFormat<LongWritable, Text>
         return new WholeFileRecordReader(job, (FileSplit) genericSplit);
     }
 }
+

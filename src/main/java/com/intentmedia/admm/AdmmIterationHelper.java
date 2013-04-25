@@ -1,4 +1,4 @@
-package com.intentmedia.bfgs;
+package com.intentmedia.admm;
 
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;

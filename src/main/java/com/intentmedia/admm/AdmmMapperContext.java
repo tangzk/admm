@@ -1,4 +1,4 @@
-package com.intentmedia.bfgs;
+package com.intentmedia.admm;
 
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
@@ -210,3 +210,4 @@ public class AdmmMapperContext implements Writable {
         this.sNorm = sNorm;
     }
 }
+

@@ -1,4 +1,4 @@
-package com.intentmedia.bfgs;
+package com.intentmedia.admm;
 
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
