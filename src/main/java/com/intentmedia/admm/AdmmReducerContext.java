@@ -8,8 +8,8 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import static com.intentmedia.bfgs.AdmmIterationHelper.admmReducerContextToJson;
-import static com.intentmedia.bfgs.AdmmIterationHelper.jsonToAdmmReducerContext;
+import static com.intentmedia.admm.AdmmIterationHelper.admmReducerContextToJson;
+import static com.intentmedia.admm.AdmmIterationHelper.jsonToAdmmReducerContext;
 
 public class AdmmReducerContext implements Writable {
 

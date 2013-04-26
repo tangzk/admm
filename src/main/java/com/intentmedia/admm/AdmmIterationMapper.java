@@ -24,14 +24,14 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static com.intentmedia.bfgs.AdmmIterationHelper.admmReducerContextToJson;
-import static com.intentmedia.bfgs.AdmmIterationHelper.createMatrixFromDataString;
-import static com.intentmedia.bfgs.AdmmIterationHelper.fsDataInputStreamToString;
-import static com.intentmedia.bfgs.AdmmIterationHelper.getColumnsToExclude;
-import static com.intentmedia.bfgs.AdmmIterationHelper.getFileLength;
-import static com.intentmedia.bfgs.AdmmIterationHelper.jsonToAdmmMapperContext;
-import static com.intentmedia.bfgs.AdmmIterationHelper.jsonToMap;
-import static com.intentmedia.bfgs.AdmmIterationHelper.removeIpFromHdfsFileName;
+import static com.intentmedia.admm.AdmmIterationHelper.admmReducerContextToJson;
+import static com.intentmedia.admm.AdmmIterationHelper.createMatrixFromDataString;
+import static com.intentmedia.admm.AdmmIterationHelper.fsDataInputStreamToString;
+import static com.intentmedia.admm.AdmmIterationHelper.getColumnsToExclude;
+import static com.intentmedia.admm.AdmmIterationHelper.getFileLength;
+import static com.intentmedia.admm.AdmmIterationHelper.jsonToAdmmMapperContext;
+import static com.intentmedia.admm.AdmmIterationHelper.jsonToMap;
+import static com.intentmedia.admm.AdmmIterationHelper.removeIpFromHdfsFileName;
 
 public class AdmmIterationMapper extends MapReduceBase
         implements Mapper<LongWritable, Text, IntWritable, Text> {

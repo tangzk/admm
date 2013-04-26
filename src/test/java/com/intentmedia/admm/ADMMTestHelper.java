@@ -9,7 +9,7 @@ public final class ADMMTestHelper {
             0.2739342447825968,
             -0.11343770210027582};
     public static final double DELTA = 0;
-    private static final String BASE_PATH = "test/java/com/intentmedia/bfgs/files/";
+    private static final String BASE_PATH = "src/test/java/com/intentmedia/admm/files/";
     private static final String LABELS_FILE = BASE_PATH + "logreg_labels";
     private static final String FEATURES_FILE = BASE_PATH + "logreg_features";
 

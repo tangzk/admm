@@ -1,5 +1,6 @@
-package com.intentmedia.bfgs;
+package com.intentmedia.admm;
 
+import com.intentmedia.admm.LogisticL2DifferentiableFunction;
 import com.intentmedia.bfgs.optimize.BFGS;
 import com.intentmedia.bfgs.optimize.IOptimizer;
 import com.intentmedia.bfgs.optimize.OptimizerParameters;

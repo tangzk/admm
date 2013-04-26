@@ -8,8 +8,8 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import static com.intentmedia.bfgs.AdmmIterationHelper.admmMapperContextToJson;
-import static com.intentmedia.bfgs.AdmmIterationHelper.jsonToAdmmMapperContext;
+import static com.intentmedia.admm.AdmmIterationHelper.admmMapperContextToJson;
+import static com.intentmedia.admm.AdmmIterationHelper.jsonToAdmmMapperContext;
 
 public class AdmmMapperContext implements Writable {
     private static final double LAMBDA_VALUE = 1e-6;

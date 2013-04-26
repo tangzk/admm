@@ -16,9 +16,9 @@ import java.util.Map;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
-import static com.intentmedia.bfgs.AdmmIterationHelper.admmMapperContextToJson;
-import static com.intentmedia.bfgs.AdmmIterationHelper.jsonToAdmmReducerContext;
-import static com.intentmedia.bfgs.AdmmIterationHelper.mapToJson;
+import static com.intentmedia.admm.AdmmIterationHelper.admmMapperContextToJson;
+import static com.intentmedia.admm.AdmmIterationHelper.jsonToAdmmReducerContext;
+import static com.intentmedia.admm.AdmmIterationHelper.mapToJson;
 
 public class AdmmIterationReducer extends MapReduceBase implements Reducer<IntWritable, Text, IntWritable, Text> {
 
