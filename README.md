@@ -1,6 +1,13 @@
-### Installation
+### Dependencies
 
-Mac OS X:
+* gradle
+
+### Installation
 ```bash
-brew install gradle
+gradle build
+```
+
+### Running Tests
+```bash
+gradle check
 ```
