@@ -73,7 +73,7 @@ public class AdmmOptimizerDriver extends Configured implements Tool {
                 columnsToExclude,
                 addIntercept,
                 regularizeIntercept);
-        boolean isFinalIteration = false;
+        boolean isFinalIteration;
 
         while (!convergedOrMaxed(curStatus, preStatus, iterationNumber, iterationsMaximum)) {
             iterationNumber++;
@@ -87,9 +87,7 @@ public class AdmmOptimizerDriver extends Configured implements Tool {
                     columnsToExclude,
                     addIntercept,
                     regularizeIntercept);
-            if (convergedOrMaxed(curStatus, preStatus, iterationNumber, iterationsMaximum)) {
-                isFinalIteration = true;
-            }
+            isFinalIteration = convergedOrMaxed(curStatus, preStatus, iterationNumber, iterationsMaximum);
             writeResultsToOutput(conf, intermediateOutputLocation, iterationNumber, finalOutputLocation, isFinalIteration);
         }
 
