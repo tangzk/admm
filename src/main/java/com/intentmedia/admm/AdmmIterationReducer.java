@@ -2,11 +2,7 @@ package com.intentmedia.admm;
 
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapred.JobConf;
-import org.apache.hadoop.mapred.MapReduceBase;
-import org.apache.hadoop.mapred.OutputCollector;
-import org.apache.hadoop.mapred.Reducer;
-import org.apache.hadoop.mapred.Reporter;
+import org.apache.hadoop.mapred.*;
 
 import java.io.IOException;
 import java.util.AbstractMap;
@@ -16,9 +12,7 @@ import java.util.Map;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
-import static com.intentmedia.admm.AdmmIterationHelper.admmMapperContextToJson;
-import static com.intentmedia.admm.AdmmIterationHelper.jsonToAdmmReducerContext;
-import static com.intentmedia.admm.AdmmIterationHelper.mapToJson;
+import static com.intentmedia.admm.AdmmIterationHelper.*;
 
 public class AdmmIterationReducer extends MapReduceBase implements Reducer<IntWritable, Text, IntWritable, Text> {
 
@@ -95,7 +89,7 @@ public class AdmmIterationReducer extends MapReduceBase implements Reducer<IntWr
         IterationDiagnostics iterationDiagnostics = setIterationDiagnostics();
         updateMapperRhosAndObjectives(iterationDiagnostics);
         if (iterationDiagnostics.getRNorm() > THRESHOLD || iterationDiagnostics.getSNorm() > THRESHOLD) {
-            //if needs more iteration, increase the counter
+            // if it needs more iterations, increase the counter
             reporter.getCounter(IterationCounter.ITERATION).increment(1);
         }
         updateSharedParameters();
@@ -162,8 +156,7 @@ public class AdmmIterationReducer extends MapReduceBase implements Reducer<IntWr
         double newRho = reducerRho;
         if (rNorm > RHO_UPDATE_THRESHOLD * sNorm) {
             newRho = RHO_INCREMENT_MULTIPLIER * reducerRho;
-        }
-        else if (sNorm > RHO_UPDATE_THRESHOLD * rNorm) {
+        } else if (sNorm > RHO_UPDATE_THRESHOLD * rNorm) {
             newRho = reducerRho / RHO_DECREMENT_MULTIPLIER;
         }
 
@@ -229,8 +222,7 @@ public class AdmmIterationReducer extends MapReduceBase implements Reducer<IntWr
         for (int i = 0; i < context.getZInitial().length; i++) {
             if (i == 0 && !regularizeIntercept) { // do not regularize the intercept
                 zUpdated[i] = xAverage[i] + uAverage[i];
-            }
-            else {
+            } else {
                 zUpdated[i] = multiplier * (xAverage[i] + uAverage[i]);
             }
         }
@@ -250,8 +242,7 @@ public class AdmmIterationReducer extends MapReduceBase implements Reducer<IntWr
             AdmmMapperContext mapperContext;
             if (mapperContexts.containsKey(splitId)) {
                 mapperContext = mapperContexts.get(splitId);
-            }
-            else {
+            } else {
                 mapperContext = new AdmmMapperContext();
             }
 

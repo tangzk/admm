@@ -55,14 +55,13 @@ public class WholeFileRecordReader implements RecordReader<LongWritable, Text> {
             byte b2 = fileIn.readByte();
             byte b1 = fileIn.readByte();
             int fileLength = ((b1 & BITWISE_AND_VALUE) << B1_OFFSET) |
-                             ((b2 & BITWISE_AND_VALUE) << B2_OFFSET) |
-                             ((b3 & BITWISE_AND_VALUE) << B3_OFFSET) |
-                             (b4 & BITWISE_AND_VALUE);
+                    ((b2 & BITWISE_AND_VALUE) << B2_OFFSET) |
+                    ((b3 & BITWISE_AND_VALUE) << B3_OFFSET) |
+                    (b4 & BITWISE_AND_VALUE);
             end = start + fileLength;
             fileIn.seek(0);
             in = new LineReader(codec.createInputStream(fileIn), job);
-        }
-        else {
+        } else {
             if (start != 0) {
                 skipFirstLine = true;
                 --start;
@@ -117,8 +116,7 @@ public class WholeFileRecordReader implements RecordReader<LongWritable, Text> {
             value.set(resultBuffer.toString());
             lineValue.clear();
             return newSize > 0;
-        }
-        catch (IOException ignored) {
+        } catch (IOException ignored) {
         }
         return false;
     }
@@ -130,8 +128,7 @@ public class WholeFileRecordReader implements RecordReader<LongWritable, Text> {
     public float getProgress() {
         if (start == end) {
             return 0.0f;
-        }
-        else {
+        } else {
             return Math.min(1.0f, (pos - start) / (float) (end - start));
         }
     }

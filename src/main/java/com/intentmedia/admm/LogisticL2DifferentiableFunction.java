@@ -17,10 +17,9 @@ public class LogisticL2DifferentiableFunction implements IDifferentiableFunction
         this.b = b;
         this.rho = rho;
         this.m = a.length;
-        if(this.m > 0) {
+        if (this.m > 0) {
             this.n = a[0].length;
-        }
-        else {
+        } else {
             this.n = 0;
         }
         this.u = u;
@@ -37,9 +36,9 @@ public class LogisticL2DifferentiableFunction implements IDifferentiableFunction
 
     public double evaluateObjectivePrimal(double[] x) {
         double result = 0.0;
-        for(int row = 0; row < m; row++) {
+        for (int row = 0; row < m; row++) {
             double ax = 0;
-            for(int col = 0; col < n; col++) {
+            for (int col = 0; col < n; col++) {
                 // Calculate dot product: ai'*x, where i ai denotes the ith row of a
                 ax += this.a[row][col] * x[col];
             }
@@ -52,7 +51,7 @@ public class LogisticL2DifferentiableFunction implements IDifferentiableFunction
 
     public double evaluateObjectiveDualPenalty(double[] x) {
         double xzuNorm = 0.0;
-        for(int col = 0; col < n; col++) {
+        for (int col = 0; col < n; col++) {
             xzuNorm += Math.pow(x[col] - z[col] + u[col], 2.0);
         }
         double xzuNormScaled = xzuNorm * this.rho / 2.0;

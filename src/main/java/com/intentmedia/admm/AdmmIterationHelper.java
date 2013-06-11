@@ -55,10 +55,7 @@ public final class AdmmIterationHelper {
         String[] rows = dataString.split("\\n");
         int numRows = rows.length;
         int numColumns = rows[0].split("\\s+").length - columnsToExclude.size();
-        int interceptOffset = 0;
-        if (addIntercept) {
-            interceptOffset = 1;
-        }
+        int interceptOffset = (addIntercept) ? 1 : 0;
         double[][] data = new double[numRows][numColumns + interceptOffset];
 
         int[] columnArray = new int[numColumns];
@@ -80,8 +77,7 @@ public final class AdmmIterationHelper {
                 newColumnArrayIndex = columnArray[j];
                 try {
                     data[i][j + interceptOffset] = Double.parseDouble(elements[newColumnArrayIndex]);
-                }
-                catch (ArrayIndexOutOfBoundsException e) {
+                } catch (ArrayIndexOutOfBoundsException e) {
                     LOG.log(Level.FINE,
                             String.format(
                                     "i value: %d, j value: %d, newColumnArrayIndex: %d, data rows: %d, data cols: %d, elements size: %d\n",
@@ -102,8 +98,7 @@ public final class AdmmIterationHelper {
         String[] columnsToExcludeArray;
         if (columnsToExcludeString == null || columnsToExcludeString.isEmpty()) {
             columnsToExcludeArray = new String[0];
-        }
-        else {
+        } else {
             columnsToExcludeArray = COMPILE.split(columnsToExcludeString);
         }
 
@@ -116,13 +111,12 @@ public final class AdmmIterationHelper {
 
     public static String removeIpFromHdfsFileName(String fileString) {
         if (fileString.contains("hdfs")) {
-            int indexOfSecondForwardSlash = fileString.indexOf("/") + 1; //add 1 to get index of second forward slash
-            int indexOfThirdForwardSlash = fileString.indexOf("/", indexOfSecondForwardSlash + 1);
+            int indexOfSecondForwardSlash = fileString.indexOf("/") + 1; // add 1 to get index of second forward slash
+            int indexOfThirdForwardSlash = fileString.indexOf("/", indexOfSecondForwardSlash + 2);
 
             return fileString.substring(0, indexOfSecondForwardSlash) + fileString
                     .substring(indexOfThirdForwardSlash, fileString.length());
-        }
-        else {
+        } else {
             return fileString;
         }
     }

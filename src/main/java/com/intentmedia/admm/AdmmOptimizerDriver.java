@@ -1,27 +1,13 @@
 package com.intentmedia.admm;
 
 import com.google.common.base.Optional;
-import com.intentmedia.admm.AdmmIterationHelper;
-import com.intentmedia.admm.AdmmIterationMapper;
-import com.intentmedia.admm.AdmmIterationReducer;
-import com.intentmedia.admm.AdmmMapperContext;
-import com.intentmedia.admm.SignalInputFormat;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
-import org.apache.hadoop.fs.FSDataInputStream;
-import org.apache.hadoop.fs.FileStatus;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.FileUtil;
-import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.*;
 import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapred.FileInputFormat;
-import org.apache.hadoop.mapred.FileOutputFormat;
-import org.apache.hadoop.mapred.JobClient;
-import org.apache.hadoop.mapred.JobConf;
-import org.apache.hadoop.mapred.RunningJob;
-import org.apache.hadoop.mapred.TextOutputFormat;
+import org.apache.hadoop.mapred.*;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 import org.jetbrains.annotations.TestOnly;
@@ -33,9 +19,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
 
-import static com.intentmedia.admm.AdmmIterationHelper.fsDataInputStreamToString;
-import static com.intentmedia.admm.AdmmIterationHelper.getFileLength;
-import static com.intentmedia.admm.AdmmIterationHelper.jsonToMap;
+import static com.intentmedia.admm.AdmmIterationHelper.*;
 
 public class AdmmOptimizerDriver extends Configured implements Tool {
 
@@ -156,8 +140,7 @@ public class AdmmOptimizerDriver extends Configured implements Tool {
         if (isFinalIteration) {
             finalOutputPath = new Path(finalOutputLocation.resolve(ITERATION_FINAL_PREFIX).toString());
             betasToWrite = true;
-        }
-        else {
+        } else {
             finalOutputPath = new Path(finalOutputLocation.resolve(ITERATION_PATH_PREFIX + iterationNumber).toString());
         }
         FileSystem s3fs = finalOutputPath.getFileSystem(conf);
@@ -184,8 +167,7 @@ public class AdmmOptimizerDriver extends Configured implements Tool {
                             betasToWrite = false;
                         }
                     }
-                }
-                finally {
+                } finally {
                     in.close();
                     out.close();
                 }

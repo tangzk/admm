@@ -10,12 +10,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapred.FileSplit;
-import org.apache.hadoop.mapred.JobConf;
-import org.apache.hadoop.mapred.MapReduceBase;
-import org.apache.hadoop.mapred.Mapper;
-import org.apache.hadoop.mapred.OutputCollector;
-import org.apache.hadoop.mapred.Reporter;
+import org.apache.hadoop.mapred.*;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -24,14 +19,7 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static com.intentmedia.admm.AdmmIterationHelper.admmReducerContextToJson;
-import static com.intentmedia.admm.AdmmIterationHelper.createMatrixFromDataString;
-import static com.intentmedia.admm.AdmmIterationHelper.fsDataInputStreamToString;
-import static com.intentmedia.admm.AdmmIterationHelper.getColumnsToExclude;
-import static com.intentmedia.admm.AdmmIterationHelper.getFileLength;
-import static com.intentmedia.admm.AdmmIterationHelper.jsonToAdmmMapperContext;
-import static com.intentmedia.admm.AdmmIterationHelper.jsonToMap;
-import static com.intentmedia.admm.AdmmIterationHelper.removeIpFromHdfsFileName;
+import static com.intentmedia.admm.AdmmIterationHelper.*;
 
 public class AdmmIterationMapper extends MapReduceBase
         implements Mapper<LongWritable, Text, IntWritable, Text> {
@@ -64,8 +52,7 @@ public class AdmmIterationMapper extends MapReduceBase
 
         try {
             fs = FileSystem.get(job);
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             LOG.log(Level.FINE, e.toString());
         }
 
@@ -91,8 +78,7 @@ public class AdmmIterationMapper extends MapReduceBase
                     }
                 }
             }
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             LOG.log(Level.FINE, e.toString());
         }
     }
@@ -103,14 +89,12 @@ public class AdmmIterationMapper extends MapReduceBase
         FileSplit split = (FileSplit) reporter.getInputSplit();
         String splitId = key.get() + "@" + split.getPath();
         splitId = removeIpFromHdfsFileName(splitId);
-
         double[][] inputSplitData = createMatrixFromDataString(value.toString(), columnsToExclude, addIntercept);
-
         AdmmMapperContext mapperContext;
+
         if (iteration == 0) {
             mapperContext = new AdmmMapperContext(inputSplitData);
-        }
-        else {
+        } else {
             mapperContext = assembleMapperContextFromCache(inputSplitData, splitId);
         }
         AdmmReducerContext reducerContext = localMapperOptimization(mapperContext, splitId);
@@ -120,15 +104,16 @@ public class AdmmIterationMapper extends MapReduceBase
     }
 
     private AdmmReducerContext localMapperOptimization(AdmmMapperContext context, String splitId) {
-        LogisticL2DifferentiableFunction myFunction =
+        LogisticL2DifferentiableFunction l2Function =
                 new LogisticL2DifferentiableFunction(context.getA(),
                         context.getB(),
                         context.getRho(),
                         context.getUInitial(),
                         context.getZInitial());
         IOptimizer.Ctx optimizationContext = new IOptimizer.Ctx(context.getXInitial());
-        bfgs.minimize(myFunction, optimizationContext);
-        double objectivePrimalValue = myFunction.evaluateObjectivePrimal(optimizationContext.m_optimumX);
+        bfgs.minimize(l2Function, optimizationContext);
+        double objectivePrimalValue = l2Function.evaluateObjectivePrimal(optimizationContext.m_optimumX);
+
         return new AdmmReducerContext(context.getUInitial(),
                 optimizationContext.m_optimumX,
                 context.getZInitial(),
@@ -149,8 +134,7 @@ public class AdmmIterationMapper extends MapReduceBase
                     preContext.getPrimalObjectiveValue(),
                     preContext.getRNorm(),
                     preContext.getSNorm());
-        }
-        else {
+        } else {
             LOG.log(Level.FINE, "Key not found. Split ID: " + splitId + " Split Map: " + splitToParameters.toString());
             throw new IOException("Key not found.  Split ID: " + splitId + " Split Map: " + splitToParameters.toString());
         }

@@ -46,11 +46,11 @@ public class AdmmMapperContext implements Writable {
 
     public AdmmMapperContext(double[][] ab) {
         b = new double[ab.length];
-        a = new double[ab.length][ab[0].length-1];
+        a = new double[ab.length][ab[0].length - 1];
 
-        for(int row=0; row<ab.length; row++) {
-            b[row] = ab[row][ab[row].length-1];
-            for(int col=0; col<ab[row].length-1; col++) {
+        for (int row = 0; row < ab.length; row++) {
+            b[row] = ab[row][ab[row].length - 1];
+            for (int col = 0; col < ab[row].length - 1; col++) {
                 a[row][col] = ab[row][col];
             }
         }
@@ -68,25 +68,17 @@ public class AdmmMapperContext implements Writable {
 
     public AdmmMapperContext(double[][] ab, double[] uInitial, double[] xInitial, double[] zInitial, double rho, double lambdaValue,
                              double primalObjectiveValue, double rNorm, double sNorm) {
+        this(uInitial, xInitial, zInitial, rho, lambdaValue, primalObjectiveValue, rNorm, sNorm);
         b = new double[ab.length];
-        a = new double[ab.length][ab[0].length-1];
+        a = new double[ab.length][ab[0].length - 1];
 
-        for(int row=0; row< ab.length; row++) {
-            b[row] = ab[row][ab[row].length-1];
-            for(int col=0; col< ab[row].length-1; col++) {
+        for (int row = 0; row < ab.length; row++) {
+            b[row] = ab[row][ab[row].length - 1];
+            for (int col = 0; col < ab[row].length - 1; col++) {
                 a[row][col] = ab[row][col];
             }
         }
 
-        this.uInitial = uInitial;
-        this.xInitial = xInitial;
-        this.zInitial = zInitial;
-
-        this.rho = rho;
-        this.lambdaValue = lambdaValue;
-        this.primalObjectiveValue = primalObjectiveValue;
-        this.rNorm = rNorm;
-        this.sNorm = sNorm;
     }
 
     public AdmmMapperContext(double[][] a,
@@ -99,8 +91,19 @@ public class AdmmMapperContext implements Writable {
                              double primalObjectiveValue,
                              double rNorm,
                              double sNorm) {
+        this(uInitial, xInitial, zInitial, rho, lambdaValue, primalObjectiveValue, rNorm, sNorm);
         this.a = a;
         this.b = b;
+    }
+
+    public AdmmMapperContext(double[] uInitial,
+                             double[] xInitial,
+                             double[] zInitial,
+                             double rho,
+                             double lambdaValue,
+                             double primalObjectiveValue,
+                             double rNorm,
+                             double sNorm) {
         this.uInitial = uInitial;
         this.xInitial = xInitial;
         this.zInitial = zInitial;

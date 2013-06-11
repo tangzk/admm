@@ -2,14 +2,10 @@
  */
 package com.intentmedia.bfgs.optimize;
 
-// ----------------------------------------------------------------------------
 /**
  * @author Vlad Roubtsov
  */
-public
-interface IFunction
-{
-    double evaluate (double [] x);
+public interface IFunction {
+    double evaluate(double[] x);
 
-} // end of interface
-// ----------------------------------------------------------------------------
+}

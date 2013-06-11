@@ -1,7 +1,6 @@
 package com.intentmedia.admm;
 
 import com.intentmedia.args4j.URIOptionHandler;
-
 import org.kohsuke.args4j.Option;
 import org.kohsuke.args4j.spi.BooleanOptionHandler;
 import org.kohsuke.args4j.spi.FloatOptionHandler;
@@ -34,7 +33,7 @@ public class AdmmOptimizerDriverArguments {
     private String columnsToExclude;
 
     public URI getOutputPath() {
-      return outputPath;
+        return outputPath;
     }
 
     public String getInputPath() {
