@@ -23,8 +23,8 @@ public class AdmmOptimizerDriverTest {
         AdmmOptimizerDriver subject = new AdmmOptimizerDriver();
 
         // invoke target
-        subject.writeResultsToOutput(conf, "", 1, uri, false);
-        subject.writeResultsToOutput(conf, "", 1, uri, true);
+        subject.writeResultsToOutput(conf, 1, uri, false);
+        subject.writeResultsToOutput(conf, 1, uri, true);
 
         // assert
         // verify
@@ -32,7 +32,7 @@ public class AdmmOptimizerDriverTest {
 
     @Test
     public void testBuildBetasString() throws Exception {
-       // initialize inputs
+        // initialize inputs
         List<Double> zInitialList = Collections.unmodifiableList(Arrays.asList(
                 0.04304983847577377,
                 0.0,

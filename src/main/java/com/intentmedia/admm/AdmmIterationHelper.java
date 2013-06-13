@@ -73,7 +73,6 @@ public final class AdmmIterationHelper {
                 data[i][0] = 1;
             }
             for (int j = 0; j < numColumns; j++) {
-                // request_id, requested_at_iso, s1, s2, ..., y
                 newColumnArrayIndex = columnArray[j];
                 try {
                     data[i][j + interceptOffset] = Double.parseDouble(elements[newColumnArrayIndex]);

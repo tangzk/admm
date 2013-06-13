@@ -4,6 +4,7 @@ import com.google.common.base.Optional;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.*;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
@@ -13,10 +14,7 @@ import org.apache.hadoop.util.ToolRunner;
 import org.jetbrains.annotations.TestOnly;
 import org.kohsuke.args4j.CmdLineParser;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.URI;
 
 import static com.intentmedia.admm.AdmmIterationHelper.*;
@@ -28,6 +26,11 @@ public class AdmmOptimizerDriver extends Configured implements Tool {
     private static final float DEFAULT_REGULARIZATION_FACTOR = 0.000001f;
     private static final String ITERATION_PATH_PREFIX = "iteration_";
     private static final String ITERATION_FINAL_PREFIX = ITERATION_PATH_PREFIX + "final";
+    private static final String INTERMEDIATE_OUTPUT_LOCATION = "/tmp";
+
+    public static void main(String[] args) throws Exception {
+        ToolRunner.run(new Configuration(), new AdmmOptimizerDriver(), args);
+    }
 
     @Override
     public int run(String[] args) throws Exception {
@@ -35,7 +38,6 @@ public class AdmmOptimizerDriver extends Configured implements Tool {
         new CmdLineParser(admmOptimizerDriverArguments).parseArgument(args);
 
         String inputDataLocation = admmOptimizerDriverArguments.getInputPath();
-        String intermediateOutputLocation = "/tmp";
         URI finalOutputLocation = admmOptimizerDriverArguments.getOutputPath();
         int iterationsMaximum = Optional.fromNullable(admmOptimizerDriverArguments.getIterationsMaximum()).or(
                 DEFAULT_ADMM_ITERATIONS_MAX);
@@ -51,7 +53,6 @@ public class AdmmOptimizerDriver extends Configured implements Tool {
         JobConf conf = new JobConf(getConf(), AdmmOptimizerDriver.class);
         long curStatus = doAdmmIteration(conf,
                 inputDataLocation,
-                intermediateOutputLocation,
                 iterationNumber,
                 regularizationFactor,
                 columnsToExclude,
@@ -65,14 +66,13 @@ public class AdmmOptimizerDriver extends Configured implements Tool {
             conf = new JobConf(getConf(), AdmmOptimizerDriver.class);
             curStatus = doAdmmIteration(conf,
                     inputDataLocation,
-                    intermediateOutputLocation,
                     iterationNumber,
                     regularizationFactor,
                     columnsToExclude,
                     addIntercept,
                     regularizeIntercept);
             isFinalIteration = convergedOrMaxed(curStatus, preStatus, iterationNumber, iterationsMaximum);
-            writeResultsToOutput(conf, intermediateOutputLocation, iterationNumber, finalOutputLocation, isFinalIteration);
+            writeResultsToOutput(conf, iterationNumber, finalOutputLocation, isFinalIteration);
         }
 
         return 0;
@@ -80,7 +80,6 @@ public class AdmmOptimizerDriver extends Configured implements Tool {
 
     public long doAdmmIteration(JobConf conf,
                                 String signalDataLocation,
-                                String intermediateOutputLocation,
                                 int iterationNumber,
                                 float regularizationFactor,
                                 String columnsToExclude,
@@ -88,9 +87,8 @@ public class AdmmOptimizerDriver extends Configured implements Tool {
                                 boolean regularizeIntercept) throws IOException {
         FileSystem fs = FileSystem.get(conf);
 
-        Path previousIntermediateOutputLocation =
-                new Path(intermediateOutputLocation + ITERATION_PATH_PREFIX + (iterationNumber - 1));
-        Path currentIntermediateOutputLocation = new Path(intermediateOutputLocation + ITERATION_PATH_PREFIX + iterationNumber);
+        Path previousIntermediateOutputLocation = combinePathStrings(INTERMEDIATE_OUTPUT_LOCATION, ITERATION_PATH_PREFIX + (iterationNumber - 1));
+        Path currentIntermediateOutputLocation = combinePathStrings(INTERMEDIATE_OUTPUT_LOCATION, ITERATION_PATH_PREFIX + iterationNumber);
         Path signalDataInputLocation = new Path(signalDataLocation);
 
         conf.setJobName("ADMM Optimizer " + iterationNumber);
@@ -125,31 +123,25 @@ public class AdmmOptimizerDriver extends Configured implements Tool {
 
     @TestOnly
     public void writeResultsToOutput(JobConf conf,
-                                     String intermediateOutputLocation,
                                      int iterationNumber,
                                      URI finalOutputLocation,
                                      boolean isFinalIteration) throws IOException {
-        Path intermediateOutputPath = new Path(intermediateOutputLocation + ITERATION_PATH_PREFIX + iterationNumber);
+        Path intermediateOutputPath = combinePathStrings(INTERMEDIATE_OUTPUT_LOCATION, ITERATION_PATH_PREFIX + iterationNumber);
 
         FileSystem fs = FileSystem.get(conf);
         FileStatus[] hdfsFiles = fs.listStatus(intermediateOutputPath);
         Path[] hdfsFilePaths = FileUtil.stat2Paths(hdfsFiles);
-        Path finalOutputPath;
-        boolean betasToWrite = false;
+        boolean betasToWrite = isFinalIteration;
+        String iterationPrefix = (isFinalIteration) ? ITERATION_FINAL_PREFIX : ITERATION_PATH_PREFIX + iterationNumber;
+        Path finalOutputPath = combinePathStrings(finalOutputLocation.toString(), iterationPrefix);
 
-        if (isFinalIteration) {
-            finalOutputPath = new Path(finalOutputLocation.resolve(ITERATION_FINAL_PREFIX).toString());
-            betasToWrite = true;
-        } else {
-            finalOutputPath = new Path(finalOutputLocation.resolve(ITERATION_PATH_PREFIX + iterationNumber).toString());
-        }
         FileSystem s3fs = finalOutputPath.getFileSystem(conf);
 
         for (Path hdfsFilePath : hdfsFilePaths) {
             FileStatus fileStatus = fs.getFileStatus(hdfsFilePath);
             if (!fileStatus.isDir()) {
                 FSDataInputStream in = fs.open(hdfsFilePath);
-                Path finalOutputPathFull = getHdfsPath(finalOutputPath, hdfsFilePath.getName());
+                Path finalOutputPathFull = new Path(finalOutputPath, hdfsFilePath.getName());
 
                 if (s3fs.exists(finalOutputPathFull)) { // if the file exists on s3, delete it
                     s3fs.delete(finalOutputPathFull, true);
@@ -180,8 +172,8 @@ public class AdmmOptimizerDriver extends Configured implements Tool {
         String jsonString = fsDataInputStreamToString(in, inputSize);
         String betasString = buildBetasString(jsonString);
 
-        Path betasPath = new Path(finalOutputLocation.resolve(BETAS_PATH).toString());
-        Path betasPathFull = getHdfsPath(betasPath, "part-00000");
+        Path betasPath = combinePathStrings(finalOutputLocation.toString(), BETAS_PATH);
+        Path betasPathFull = new Path(betasPath, "part-00000");
 
         FileSystem s3fs = betasPath.getFileSystem(conf);
 
@@ -211,16 +203,12 @@ public class AdmmOptimizerDriver extends Configured implements Tool {
         return outStringBuilder.toString();
     }
 
-    private Path getHdfsPath(Path finalOutputPath, String name) {
-        return new Path(finalOutputPath, name);
-    }
-
     private boolean convergedOrMaxed(long curStatus, long preStatus, int iterationNumber, int iterationsMaximum) {
         return curStatus <= preStatus || iterationNumber >= iterationsMaximum;
     }
 
-    public static void main(String[] args) throws Exception {
-        ToolRunner.run(new Configuration(), new AdmmOptimizerDriver(), args);
+    private Path combinePathStrings(String s1, String s2) {
+        return new Path(new File(s1, s2).toString());
     }
 }
 

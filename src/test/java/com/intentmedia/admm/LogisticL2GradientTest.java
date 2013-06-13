@@ -1,6 +1,7 @@
 package com.intentmedia.admm;
 
 import org.junit.Test;
+
 import static org.junit.Assert.assertEquals;
 
 public class LogisticL2GradientTest {
@@ -19,7 +20,7 @@ public class LogisticL2GradientTest {
 
         LogisticL2Gradient myGradient = new LogisticL2Gradient(features, labels, RHO, u, z);
         myGradient.evaluate(x, out);
-        for(int i = 0; i < out.length; i++) {
+        for (int i = 0; i < out.length; i++) {
             assertEquals(RESULT_AT_ZERO[i], out[i], ADMMTestHelper.DELTA);
         }
     }
@@ -35,7 +36,7 @@ public class LogisticL2GradientTest {
 
         LogisticL2Gradient myGradient = new LogisticL2Gradient(features, labels, RHO, u, z);
         myGradient.evaluate(x, out);
-        for(int i = 0; i < out.length; i++) {
+        for (int i = 0; i < out.length; i++) {
             assertEquals(RESULT_AT_NONZERO[i], out[i], ADMMTestHelper.DELTA);
         }
     }
