@@ -17,6 +17,9 @@ dependencies {
 sourceCompatibility = 1.6
 
 jar {
+    from {
+        configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
+    }
     manifest {
         attributes 'Implementation-Title': 'ADMM Hadoop Optimizer', 'Implementation-Version': '0.0.1'
     }
