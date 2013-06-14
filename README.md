@@ -23,11 +23,6 @@ hadoop jar build/libs/admm.jar com.intentmedia.admm.AdmmOptimizerDriver \
 
 * gradle
 
-### Installation
-```bash
-gradle build
-```
-
 ### Running Tests
 ```bash
 gradle check
