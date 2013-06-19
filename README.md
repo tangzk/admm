@@ -3,10 +3,12 @@
 ADMM is a Hadoop Map Reduce implementation of the Alternating Direction Method
 of Multipliers (ADMM) algorithm [1].
 
-ADMM is a generic optimization algorithm, this implementation includes a
-logistic regression objective function, but can be extended to use other
-objective functions.  To checkout and run an example in MapReduce standalone
-mode:
+ADMM is a generic optimization algorithm.  This implementation includes a
+logistic regression objective function, however it can be extended to use other
+objective functions.
+
+To checkout the code and run an example in MapReduce standalone
+mode, execute:
 
 ```bash
 git clone git@github.com:intentmedia/admm.git
