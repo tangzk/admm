@@ -9,6 +9,7 @@ import java.util.*;
 import java.util.regex.Pattern;
 
 public class SampleFileReader {
+
     private final Pattern compile;
     private final String separator;
     private final Set<Integer> columnsToSkip;
@@ -69,5 +70,4 @@ public class SampleFileReader {
 
         return features;
     }
-
 }

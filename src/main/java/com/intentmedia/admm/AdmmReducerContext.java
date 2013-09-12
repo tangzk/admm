@@ -16,6 +16,9 @@ public class AdmmReducerContext implements Writable {
     @JsonProperty("uInitial")
     private double[] uInitial;
 
+    @JsonProperty("xInitial")
+    private double[] xInitial;
+
     @JsonProperty("xUpdated")
     private double[] xUpdated;
 
@@ -31,8 +34,10 @@ public class AdmmReducerContext implements Writable {
     @JsonProperty("lambdaValue")
     private double lambdaValue;
 
-    public AdmmReducerContext(double[] uInitial, double[] xUpdated, double[] zInitial, double primalObjectiveValue, double rho, double lambdaValue) {
+    public AdmmReducerContext(double[] uInitial, double[] xInitial, double[] xUpdated, double[] zInitial,
+                              double primalObjectiveValue, double rho, double lambdaValue) {
         this.uInitial = uInitial;
+        this.xInitial = xInitial;
         this.xUpdated = xUpdated;
         this.zInitial = zInitial;
         this.primalObjectiveValue = primalObjectiveValue;
@@ -45,6 +50,7 @@ public class AdmmReducerContext implements Writable {
 
     public void setAdmmReducerContext(AdmmReducerContext context) {
         this.uInitial = context.uInitial;
+        this.xInitial = context.xInitial;
         this.xUpdated = context.xUpdated;
         this.zInitial = context.zInitial;
         this.primalObjectiveValue = context.primalObjectiveValue;
@@ -68,6 +74,11 @@ public class AdmmReducerContext implements Writable {
     @JsonProperty("uInitial")
     public double[] getUInitial() {
         return uInitial;
+    }
+
+    @JsonProperty("xInitial")
+    public double[] getXInitial() {
+        return xInitial;
     }
 
     @JsonProperty("xUpdated")

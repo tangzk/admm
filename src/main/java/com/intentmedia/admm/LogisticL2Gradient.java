@@ -45,6 +45,9 @@ public class LogisticL2Gradient implements IFunctionGradient {
             }
         }
         for (int col = 0; col < this.n; col++) {
+            out[col] /= this.m;
+        }
+        for (int col = 0; col < this.n; col++) {
             out[col] += this.rho * (x[col] - this.z[col] + this.u[col]);
         }
     }

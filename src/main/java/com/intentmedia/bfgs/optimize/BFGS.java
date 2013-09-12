@@ -62,7 +62,6 @@ final public class BFGS<T extends IDifferentiableFunction> extends AbstractOptim
             // do the line search in the current direction:
 
             fx = LineSearch.search(f, fx, Vfx_prev, x_prev, direction, x); // this updates fx and x
-//            System.out.println (i + ", " +  fx);
 
             // if the current point shift (relative to current position) is below tolerance, we're done:
             delta = 0.0;

@@ -76,17 +76,12 @@ final class NelderMead<T extends IFunction> extends AbstractOptimizer
                 }
             }
 
-//            System.out.println (Fvertex [v_best] + " | " + Fvertex [v_next_worst] + "  " + Fvertex [v_worst]);
-//            System.out.println (v_best + " | " + v_next_worst + "  " + v_worst);
-
             // if the range of function values at the current vertex points relative to midpoint
             // is smaller than tolF, we are done:
             final double Fmin = Fvertex[v_best];
             final double Fmax = Fvertex[v_worst];
 
             final double[] Xbest = vertex[v_best];
-
-//            System.out.println (Fmin + "," + Xbest [0] + "," + Xbest [1] + ", " +  (2.0 * Math.abs (Fmax - Fmin) /(Math.abs (Fmax) + Math.abs (Fmin) + tolF)) + ", " + dump (vertex));
 
             if ((i >= maxiterations) || (evaluationsF >= maxevaluations)
                     || (2.0 * Math.abs(Fmax - Fmin) / (Math.abs(Fmax) + Math.abs(Fmin) + tolF) < tolF)) {

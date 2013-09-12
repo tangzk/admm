@@ -128,7 +128,6 @@ public final class GoldenSection implements IOptimizer1V {
             }
         }
 
-        System.out.println("iter -> " + iter);
         x[0] = bestx;
         return bestf;
     }

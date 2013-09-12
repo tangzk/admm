@@ -1,5 +1,6 @@
 package com.intentmedia.admm;
 
+import com.intentmedia.admm.helpers.BFGSTestHelper;
 import com.intentmedia.bfgs.optimize.BFGS;
 import com.intentmedia.bfgs.optimize.IOptimizer;
 import com.intentmedia.bfgs.optimize.OptimizerParameters;
@@ -16,8 +17,8 @@ public class BFGSTest {
         OptimizerParameters optimizerParameters = new OptimizerParameters();
         BFGS<LogisticL2DifferentiableFunction> bfgs = new BFGS<LogisticL2DifferentiableFunction>(optimizerParameters);
 
-        double[][] features = ADMMTestHelper.featureMatrix();
-        double[] labels = ADMMTestHelper.labelsVector();
+        double[][] features = BFGSTestHelper.featureMatrix();
+        double[] labels = BFGSTestHelper.labelsVector();
         double[] u = new double[features[0].length];
         double[] z = new double[features[0].length];
         double[] xStart = new double[features[0].length];
@@ -29,7 +30,7 @@ public class BFGSTest {
         bfgs.minimize(myFunction, optimizationContext);
 
         for (int i = 0; i < xStart.length; i++) {
-            assertEquals(ADMMTestHelper.RESULT[i], optimizationContext.m_optimumX[i], ADMMTestHelper.DELTA);
+            assertEquals(BFGSTestHelper.RESULT[i], optimizationContext.m_optimumX[i], BFGSTestHelper.DELTA);
         }
     }
 

@@ -43,4 +43,3 @@ public class SignalInputFormat extends FileInputFormat<LongWritable, Text>
         return new WholeFileRecordReader(job, (FileSplit) genericSplit);
     }
 }
-

@@ -14,8 +14,8 @@ public class AdmmOptimizerDriverArguments {
     @Option(name = "-outputPath", required = true, handler = URIOptionHandler.class)
     private URI outputPath;
 
-    @Option(name = "-inputPath", required = true, handler = StringOptionHandler.class)
-    private String inputPath;
+    @Option(name = "-signalPath", required = true, handler = StringOptionHandler.class)
+    private String signalPath;
 
     @Option(name = "-iterationsMaximum", required = false, handler = IntOptionHandler.class)
     private int iterationsMaximum;
@@ -36,8 +36,8 @@ public class AdmmOptimizerDriverArguments {
         return outputPath;
     }
 
-    public String getInputPath() {
-        return inputPath;
+    public String getSignalPath() {
+        return signalPath;
     }
 
     public int getIterationsMaximum() {

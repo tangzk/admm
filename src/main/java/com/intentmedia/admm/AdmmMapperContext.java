@@ -12,6 +12,7 @@ import static com.intentmedia.admm.AdmmIterationHelper.admmMapperContextToJson;
 import static com.intentmedia.admm.AdmmIterationHelper.jsonToAdmmMapperContext;
 
 public class AdmmMapperContext implements Writable {
+
     private static final double LAMBDA_VALUE = 1e-6;
 
     @JsonProperty("a")
@@ -66,9 +67,13 @@ public class AdmmMapperContext implements Writable {
         sNorm = -1;
     }
 
+    public AdmmMapperContext(double[][] ab, double rho) {
+        this(ab);
+        this.rho = rho;
+    }
+
     public AdmmMapperContext(double[][] ab, double[] uInitial, double[] xInitial, double[] zInitial, double rho, double lambdaValue,
                              double primalObjectiveValue, double rNorm, double sNorm) {
-        this(uInitial, xInitial, zInitial, rho, lambdaValue, primalObjectiveValue, rNorm, sNorm);
         b = new double[ab.length];
         a = new double[ab.length][ab[0].length - 1];
 
@@ -79,6 +84,15 @@ public class AdmmMapperContext implements Writable {
             }
         }
 
+        this.uInitial = uInitial;
+        this.xInitial = xInitial;
+        this.zInitial = zInitial;
+
+        this.rho = rho;
+        this.lambdaValue = lambdaValue;
+        this.primalObjectiveValue = primalObjectiveValue;
+        this.rNorm = rNorm;
+        this.sNorm = sNorm;
     }
 
     public AdmmMapperContext(double[][] a,
@@ -91,19 +105,8 @@ public class AdmmMapperContext implements Writable {
                              double primalObjectiveValue,
                              double rNorm,
                              double sNorm) {
-        this(uInitial, xInitial, zInitial, rho, lambdaValue, primalObjectiveValue, rNorm, sNorm);
         this.a = a;
         this.b = b;
-    }
-
-    public AdmmMapperContext(double[] uInitial,
-                             double[] xInitial,
-                             double[] zInitial,
-                             double rho,
-                             double lambdaValue,
-                             double primalObjectiveValue,
-                             double rNorm,
-                             double sNorm) {
         this.uInitial = uInitial;
         this.xInitial = xInitial;
         this.zInitial = zInitial;
@@ -173,6 +176,11 @@ public class AdmmMapperContext implements Writable {
         return rho;
     }
 
+    @JsonProperty("rho")
+    public void setRho(double rho) {
+        this.rho = rho;
+    }
+
     @JsonProperty("lambdaValue")
     public double getLambdaValue() {
         return lambdaValue;
@@ -183,24 +191,14 @@ public class AdmmMapperContext implements Writable {
         return primalObjectiveValue;
     }
 
-    @JsonProperty("rNorm")
-    public double getRNorm() {
-        return rNorm;
-    }
-
-    @JsonProperty("sNorm")
-    public double getSNorm() {
-        return sNorm;
-    }
-
-    @JsonProperty("rho")
-    public void setRho(double rho) {
-        this.rho = rho;
-    }
-
     @JsonProperty("primalObjectiveValue")
     public void setPrimalObjectiveValue(double primalObjectiveValue) {
         this.primalObjectiveValue = primalObjectiveValue;
+    }
+
+    @JsonProperty("rNorm")
+    public double getRNorm() {
+        return rNorm;
     }
 
     @JsonProperty("rNorm")
@@ -209,8 +207,12 @@ public class AdmmMapperContext implements Writable {
     }
 
     @JsonProperty("sNorm")
+    public double getSNorm() {
+        return sNorm;
+    }
+
+    @JsonProperty("sNorm")
     public void setSNorm(double sNorm) {
         this.sNorm = sNorm;
     }
 }
-

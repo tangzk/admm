@@ -3,42 +3,36 @@ package com.intentmedia.admm;
 import com.google.common.base.Optional;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
-import org.apache.hadoop.fs.*;
 import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.io.IOUtils;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.*;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
-import org.jetbrains.annotations.TestOnly;
 import org.kohsuke.args4j.CmdLineParser;
 
-import java.io.*;
+import java.io.IOException;
 import java.net.URI;
-
-import static com.intentmedia.admm.AdmmIterationHelper.*;
 
 public class AdmmOptimizerDriver extends Configured implements Tool {
 
     public static final String BETAS_PATH = "betas";
     private static final int DEFAULT_ADMM_ITERATIONS_MAX = 2;
     private static final float DEFAULT_REGULARIZATION_FACTOR = 0.000001f;
-    private static final String ITERATION_PATH_PREFIX = "iteration_";
-    private static final String ITERATION_FINAL_PREFIX = ITERATION_PATH_PREFIX + "final";
-    private static final String INTERMEDIATE_OUTPUT_LOCATION = "/tmp";
-
-    public static void main(String[] args) throws Exception {
-        ToolRunner.run(new Configuration(), new AdmmOptimizerDriver(), args);
-    }
+    private static final String S3_ITERATION_FOLDER_NAME = "iteration_";
+    private static final String S3_FINAL_ITERATION_FOLDER_NAME = S3_ITERATION_FOLDER_NAME + "final";
+    private static final String S3_STANDARD_ERROR_FOLDER_NAME = "standard-error";
+    private static final String S3_BETAS_FOLDER_NAME = "betas";
 
     @Override
     public int run(String[] args) throws Exception {
         AdmmOptimizerDriverArguments admmOptimizerDriverArguments = new AdmmOptimizerDriverArguments();
         new CmdLineParser(admmOptimizerDriverArguments).parseArgument(args);
 
-        String inputDataLocation = admmOptimizerDriverArguments.getInputPath();
-        URI finalOutputLocation = admmOptimizerDriverArguments.getOutputPath();
+        String signalDataLocation = admmOptimizerDriverArguments.getSignalPath();
+        String intermediateHdfsBaseString = "/tmp";
+        URI finalOutputBaseUrl = admmOptimizerDriverArguments.getOutputPath();
         int iterationsMaximum = Optional.fromNullable(admmOptimizerDriverArguments.getIterationsMaximum()).or(
                 DEFAULT_ADMM_ITERATIONS_MAX);
         float regularizationFactor = Optional.fromNullable(admmOptimizerDriverArguments.getRegularizationFactor()).or(
@@ -47,56 +41,116 @@ public class AdmmOptimizerDriver extends Configured implements Tool {
         boolean regularizeIntercept = Optional.fromNullable(admmOptimizerDriverArguments.getRegularizeIntercept()).or(false);
         String columnsToExclude = Optional.fromNullable(admmOptimizerDriverArguments.getColumnsToExclude()).or("");
 
-        long preStatus = 0;
-
         int iterationNumber = 0;
-        JobConf conf = new JobConf(getConf(), AdmmOptimizerDriver.class);
-        long curStatus = doAdmmIteration(conf,
-                inputDataLocation,
-                iterationNumber,
-                regularizationFactor,
-                columnsToExclude,
-                addIntercept,
-                regularizeIntercept);
-        boolean isFinalIteration;
+        boolean isFinalIteration = false;
 
-        while (!convergedOrMaxed(curStatus, preStatus, iterationNumber, iterationsMaximum)) {
-            iterationNumber++;
-            preStatus = 0;
-            conf = new JobConf(getConf(), AdmmOptimizerDriver.class);
-            curStatus = doAdmmIteration(conf,
-                    inputDataLocation,
+        while (!isFinalIteration) {
+            long preStatus = 0;
+            JobConf conf = new JobConf(getConf(), AdmmOptimizerDriver.class);
+            Path previousHdfsResultsPath = new Path(intermediateHdfsBaseString + S3_ITERATION_FOLDER_NAME + (iterationNumber - 1));
+            Path currentHdfsResultsPath = new Path(intermediateHdfsBaseString + S3_ITERATION_FOLDER_NAME + iterationNumber);
+
+            long curStatus = doAdmmIteration(conf,
+                    previousHdfsResultsPath,
+                    currentHdfsResultsPath,
+                    signalDataLocation,
                     iterationNumber,
-                    regularizationFactor,
                     columnsToExclude,
                     addIntercept,
-                    regularizeIntercept);
+                    regularizeIntercept,
+                    regularizationFactor);
             isFinalIteration = convergedOrMaxed(curStatus, preStatus, iterationNumber, iterationsMaximum);
-            writeResultsToOutput(conf, iterationNumber, finalOutputLocation, isFinalIteration);
+            String s3IterationFolderName = getS3IterationFolderName(isFinalIteration, iterationNumber);
+            printResultsToS3(conf, currentHdfsResultsPath, finalOutputBaseUrl, new AdmmResultWriterIteration(), s3IterationFolderName);
+
+            if(isFinalIteration) {
+                printResultsToS3(conf, currentHdfsResultsPath, finalOutputBaseUrl, new AdmmResultWriterBetas(),
+                        S3_BETAS_FOLDER_NAME);
+                JobConf stdErrConf = new JobConf(getConf(), AdmmOptimizerDriver.class);
+                Path standardErrorHdfsPath = new Path(intermediateHdfsBaseString + S3_STANDARD_ERROR_FOLDER_NAME);
+                doStandardErrorCalculation(
+                        stdErrConf,
+                        currentHdfsResultsPath,
+                        standardErrorHdfsPath,
+                        signalDataLocation,
+                        iterationNumber,
+                        columnsToExclude,
+                        addIntercept,
+                        regularizeIntercept,
+                        regularizationFactor);
+                printResultsToS3(stdErrConf, standardErrorHdfsPath, finalOutputBaseUrl, new AdmmResultWriterIteration(),
+                        S3_STANDARD_ERROR_FOLDER_NAME);
+            }
+            iterationNumber++;
         }
 
         return 0;
     }
 
+    private String getS3IterationFolderName(boolean isFinalIteration, int iterationNumber) {
+        return (isFinalIteration) ? S3_FINAL_ITERATION_FOLDER_NAME : S3_ITERATION_FOLDER_NAME + iterationNumber;
+    }
+
+    public void printResultsToS3(JobConf conf, Path hdfsDirectoryPath, URI finalOutputBaseUrl,
+                                 AdmmResultWriter admmResultWriter, String finalOutputFolderName) throws IOException {
+        Path finalOutputPath = new Path(finalOutputBaseUrl.resolve(finalOutputFolderName).toString());
+        HdfsToS3ResultsWriter hdfsToS3ResultsWriter = new HdfsToS3ResultsWriter(conf, hdfsDirectoryPath,
+                admmResultWriter, finalOutputPath);
+        hdfsToS3ResultsWriter.writeToS3();
+    }
+
+    public void doStandardErrorCalculation(JobConf conf,
+                                           Path currentHdfsPath,
+                                           Path standardErrorHdfsPath,
+                                           String signalDataLocation,
+                                           int iterationNumber,
+                                           String columnsToExclude,
+                                           boolean addIntercept,
+                                           boolean regularizeIntercept,
+                                           float regularizationFactor) throws IOException {
+        Path signalDataInputLocation = new Path(signalDataLocation);
+
+        // No addIntercept option as it would be added in the intermediate data by the Admm iterations.
+        conf.setJobName("ADMM Standard Errors");
+        conf.set("mapred.child.java.opts", "-Xmx2g");
+        conf.set("previous.intermediate.output.location", currentHdfsPath.toString());
+        conf.set("columns.to.exclude", columnsToExclude);
+        conf.setInt("iteration.number", iterationNumber);
+        conf.setBoolean("add.intercept", addIntercept);
+        conf.setBoolean("regularize.intercept", regularizeIntercept);
+        conf.setFloat("regularization.factor", regularizationFactor);
+
+        conf.setMapperClass(AdmmStandardErrorsMapper.class);
+        conf.setReducerClass(AdmmStandardErrorsReducer.class);
+        conf.setMapOutputKeyClass(IntWritable.class);
+        conf.setMapOutputValueClass(Text.class);
+        conf.setOutputKeyClass(IntWritable.class);
+        conf.setOutputValueClass(Text.class);
+        conf.setInputFormat(SignalInputFormat.class);
+        conf.setOutputFormat(TextOutputFormat.class);
+
+        FileInputFormat.setInputPaths(conf, signalDataInputLocation);
+        FileOutputFormat.setOutputPath(conf, standardErrorHdfsPath);
+
+        JobClient.runJob(conf);
+    }
+
     public long doAdmmIteration(JobConf conf,
+                                Path previousHdfsPath,
+                                Path currentHdfsPath,
                                 String signalDataLocation,
                                 int iterationNumber,
-                                float regularizationFactor,
                                 String columnsToExclude,
                                 boolean addIntercept,
-                                boolean regularizeIntercept) throws IOException {
-        FileSystem fs = FileSystem.get(conf);
-
-        Path previousIntermediateOutputLocation = combinePathStrings(INTERMEDIATE_OUTPUT_LOCATION, ITERATION_PATH_PREFIX + (iterationNumber - 1));
-        Path currentIntermediateOutputLocation = combinePathStrings(INTERMEDIATE_OUTPUT_LOCATION, ITERATION_PATH_PREFIX + iterationNumber);
+                                boolean regularizeIntercept,
+                                float regularizationFactor) throws IOException {
         Path signalDataInputLocation = new Path(signalDataLocation);
 
         conf.setJobName("ADMM Optimizer " + iterationNumber);
         conf.set("mapred.child.java.opts", "-Xmx2g");
+        conf.set("previous.intermediate.output.location", previousHdfsPath.toString());
         conf.setInt("iteration.number", iterationNumber);
-        conf.set("previous.intermediate.output.location", previousIntermediateOutputLocation.toString());
         conf.set("columns.to.exclude", columnsToExclude);
-        conf.setBoolean("calculate.scaling.factors", false);
         conf.setBoolean("add.intercept", addIntercept);
         conf.setBoolean("regularize.intercept", regularizeIntercept);
         conf.setFloat("regularization.factor", regularizationFactor);
@@ -111,104 +165,22 @@ public class AdmmOptimizerDriver extends Configured implements Tool {
         conf.setOutputFormat(TextOutputFormat.class);
 
         FileInputFormat.setInputPaths(conf, signalDataInputLocation);
-        if (fs.exists(currentIntermediateOutputLocation)) {
-            fs.delete(currentIntermediateOutputLocation, true);
+        FileSystem fs = FileSystem.get(conf);
+        if (fs.exists(currentHdfsPath)) {
+            fs.delete(currentHdfsPath, true);
         }
-        FileOutputFormat.setOutputPath(conf, currentIntermediateOutputLocation);
+        FileOutputFormat.setOutputPath(conf, currentHdfsPath);
 
         RunningJob job = JobClient.runJob(conf);
 
         return job.getCounters().findCounter(AdmmIterationReducer.IterationCounter.ITERATION).getValue();
     }
 
-    @TestOnly
-    public void writeResultsToOutput(JobConf conf,
-                                     int iterationNumber,
-                                     URI finalOutputLocation,
-                                     boolean isFinalIteration) throws IOException {
-        Path intermediateOutputPath = combinePathStrings(INTERMEDIATE_OUTPUT_LOCATION, ITERATION_PATH_PREFIX + iterationNumber);
-
-        FileSystem fs = FileSystem.get(conf);
-        FileStatus[] hdfsFiles = fs.listStatus(intermediateOutputPath);
-        Path[] hdfsFilePaths = FileUtil.stat2Paths(hdfsFiles);
-        boolean betasToWrite = isFinalIteration;
-        String iterationPrefix = (isFinalIteration) ? ITERATION_FINAL_PREFIX : ITERATION_PATH_PREFIX + iterationNumber;
-        Path finalOutputPath = combinePathStrings(finalOutputLocation.toString(), iterationPrefix);
-
-        FileSystem s3fs = finalOutputPath.getFileSystem(conf);
-
-        for (Path hdfsFilePath : hdfsFilePaths) {
-            FileStatus fileStatus = fs.getFileStatus(hdfsFilePath);
-            if (!fileStatus.isDir()) {
-                FSDataInputStream in = fs.open(hdfsFilePath);
-                Path finalOutputPathFull = new Path(finalOutputPath, hdfsFilePath.getName());
-
-                if (s3fs.exists(finalOutputPathFull)) { // if the file exists on s3, delete it
-                    s3fs.delete(finalOutputPathFull, true);
-                }
-
-                OutputStream out = s3fs.create(finalOutputPathFull);
-                try {
-                    IOUtils.copyBytes(in, out, conf, false);
-                    if (betasToWrite) {
-                        int inputSize = getFileLength(fs, hdfsFilePath);
-
-                        if (inputSize > 0) {
-                            in.seek(0);
-                            writeBetas(in, inputSize, conf, finalOutputLocation);
-                            betasToWrite = false;
-                        }
-                    }
-                } finally {
-                    in.close();
-                    out.close();
-                }
-            }
-        }
-    }
-
-    private void writeBetas(FSDataInputStream in, int inputSize, JobConf conf, URI finalOutputLocation)
-            throws IOException {
-        String jsonString = fsDataInputStreamToString(in, inputSize);
-        String betasString = buildBetasString(jsonString);
-
-        Path betasPath = combinePathStrings(finalOutputLocation.toString(), BETAS_PATH);
-        Path betasPathFull = new Path(betasPath, "part-00000");
-
-        FileSystem s3fs = betasPath.getFileSystem(conf);
-
-        InputStream inBetas = new ByteArrayInputStream(betasString.getBytes());
-        OutputStream out = s3fs.create(betasPathFull);
-        IOUtils.copyBytes(inBetas, out, conf, true);
-    }
-
-    @TestOnly
-    public String buildBetasString(String jsonString) throws IOException {
-        String betaString = jsonToMap(jsonString).values().iterator().next();
-
-        AdmmMapperContext admmMapperContext = AdmmIterationHelper.jsonToAdmmMapperContext(betaString);
-
-        double[] zInitials = admmMapperContext.getZInitial();
-        StringBuilder outStringBuilder = new StringBuilder();
-
-        for (int i = 0; i < zInitials.length; i++) {
-            outStringBuilder.append(String.format("[%s]", zInitials[i]));
-
-            if (i < zInitials.length - 1) {
-                outStringBuilder.append(",");
-            }
-        }
-        outStringBuilder.append("]");
-
-        return outStringBuilder.toString();
-    }
-
     private boolean convergedOrMaxed(long curStatus, long preStatus, int iterationNumber, int iterationsMaximum) {
         return curStatus <= preStatus || iterationNumber >= iterationsMaximum;
     }
 
-    private Path combinePathStrings(String s1, String s2) {
-        return new Path(new File(s1, s2).toString());
+    public static void main(String[] args) throws Exception {
+        ToolRunner.run(new Configuration(), new AdmmOptimizerDriver(), args);
     }
 }
-

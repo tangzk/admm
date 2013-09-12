@@ -56,7 +56,6 @@ abstract class LineSearch {
             }
 
             final double fx_alpha = f.evaluate(xout);
-//            System.out.println (i + " fx = " + fx_alpha);
 
             if (fx_alpha < fx + SIGMA * alpha * p)
                 return fx_alpha;

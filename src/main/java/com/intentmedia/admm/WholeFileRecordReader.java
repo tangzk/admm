@@ -28,7 +28,6 @@ public class WholeFileRecordReader implements RecordReader<LongWritable, Text> {
     private static final int B2_OFFSET = 16;
     private static final int B3_OFFSET = 8;
     private static final int BITWISE_AND_VALUE = 0xff;
-
     private CompressionCodecFactory compressionCodecs = null;
     private long start;
     private long pos;
@@ -54,10 +53,8 @@ public class WholeFileRecordReader implements RecordReader<LongWritable, Text> {
             byte b3 = fileIn.readByte();
             byte b2 = fileIn.readByte();
             byte b1 = fileIn.readByte();
-            int fileLength = ((b1 & BITWISE_AND_VALUE) << B1_OFFSET) |
-                    ((b2 & BITWISE_AND_VALUE) << B2_OFFSET) |
-                    ((b3 & BITWISE_AND_VALUE) << B3_OFFSET) |
-                    (b4 & BITWISE_AND_VALUE);
+            int fileLength =
+                    ((b1 & BITWISE_AND_VALUE) << B1_OFFSET) | ((b2 & BITWISE_AND_VALUE) << B2_OFFSET) | ((b3 & BITWISE_AND_VALUE) << B3_OFFSET) | (b4 & BITWISE_AND_VALUE);
             end = start + fileLength;
             fileIn.seek(0);
             in = new LineReader(codec.createInputStream(fileIn), job);
@@ -92,8 +89,6 @@ public class WholeFileRecordReader implements RecordReader<LongWritable, Text> {
     @Override
     public synchronized boolean next(LongWritable key, Text value) throws IOException {
         try {
-            final Text endLine = new Text("\n");
-
             key.set(pos);
             Text lineValue = new Text();
             int newSize = 0;

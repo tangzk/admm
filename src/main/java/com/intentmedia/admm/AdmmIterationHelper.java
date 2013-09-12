@@ -1,6 +1,7 @@
 package com.intentmedia.admm;
 
 import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IOUtils;
@@ -22,6 +23,8 @@ public final class AdmmIterationHelper {
     private static final Pattern COMPILE = Pattern.compile(",");
     private static final Logger LOG = Logger.getLogger(AdmmIterationHelper.class.getName());
     private static final Pattern TAB_PATTERN = Pattern.compile("\t");
+    private static final Pattern NEWLINE_PATTERN = Pattern.compile("\\n");
+    private static final Pattern SPACE_PATTERN = Pattern.compile("\\s+");
 
     private AdmmIterationHelper() {
     }
@@ -34,8 +37,16 @@ public final class AdmmIterationHelper {
         return OBJECT_MAPPER.writeValueAsString(context);
     }
 
+    public static String admmStandardErrorReducerContextToJson(AdmmStandardErrorsReducerContext context) throws IOException {
+        return OBJECT_MAPPER.writeValueAsString(context);
+    }
+
     public static String mapToJson(Map<String, String> vector) throws IOException {
         return OBJECT_MAPPER.writeValueAsString(vector);
+    }
+
+    public static String arrayToJson(double[] array) throws IOException {
+        return OBJECT_MAPPER.writeValueAsString(array);
     }
 
     public static Map<String, String> jsonToMap(String json) throws IOException {
@@ -50,17 +61,24 @@ public final class AdmmIterationHelper {
         return OBJECT_MAPPER.readValue(json, AdmmReducerContext.class);
     }
 
+    public static AdmmStandardErrorsReducerContext jsonToAdmmStandardErrorsReducerContext(String json) throws IOException {
+        return OBJECT_MAPPER.readValue(json, AdmmStandardErrorsReducerContext.class);
+    }
+
     public static double[][] createMatrixFromDataString(String dataString, Set<Integer> columnsToExclude, boolean addIntercept)
             throws ArrayIndexOutOfBoundsException {
-        String[] rows = dataString.split("\\n");
+        String[] rows = NEWLINE_PATTERN.split(dataString);
         int numRows = rows.length;
-        int numColumns = rows[0].split("\\s+").length - columnsToExclude.size();
-        int interceptOffset = (addIntercept) ? 1 : 0;
+        int numColumns = SPACE_PATTERN.split(rows[0]).length - columnsToExclude.size();
+        int interceptOffset = 0;
+        if (addIntercept) {
+            interceptOffset = 1;
+        }
         double[][] data = new double[numRows][numColumns + interceptOffset];
 
         int[] columnArray = new int[numColumns];
         int newColumnArrayIndex = 0;
-        for (int i = 0; i < rows[0].split("\\s+").length; i++) {
+        for (int i = 0; i < SPACE_PATTERN.split(rows[0]).length; i++) {
             if (!columnsToExclude.contains(i)) {
                 columnArray[newColumnArrayIndex] = i;
                 newColumnArrayIndex++;
@@ -68,11 +86,12 @@ public final class AdmmIterationHelper {
         }
 
         for (int i = 0; i < numRows; i++) {
-            String[] elements = rows[i].split("\\s+");
+            String[] elements = SPACE_PATTERN.split(rows[i]);
             if (addIntercept) {
                 data[i][0] = 1;
             }
             for (int j = 0; j < numColumns; j++) {
+                // request_id, requested_at_iso, s1, s2, ..., y
                 newColumnArrayIndex = columnArray[j];
                 try {
                     data[i][j + interceptOffset] = Double.parseDouble(elements[newColumnArrayIndex]);
@@ -110,8 +129,8 @@ public final class AdmmIterationHelper {
 
     public static String removeIpFromHdfsFileName(String fileString) {
         if (fileString.contains("hdfs")) {
-            int indexOfSecondForwardSlash = fileString.indexOf("/") + 1; // add 1 to get index of second forward slash
-            int indexOfThirdForwardSlash = fileString.indexOf("/", indexOfSecondForwardSlash + 2);
+            int indexOfSecondForwardSlash = fileString.indexOf("/") + 1; //add 1 to get index of second forward slash
+            int indexOfThirdForwardSlash = fileString.indexOf("/", indexOfSecondForwardSlash + 1);
 
             return fileString.substring(0, indexOfSecondForwardSlash) + fileString
                     .substring(indexOfThirdForwardSlash, fileString.length());
@@ -129,5 +148,31 @@ public final class AdmmIterationHelper {
 
     public static int getFileLength(FileSystem fs, Path thisFilePath) throws IOException {
         return (int) fs.getFileStatus(thisFilePath).getLen();
+    }
+
+    public static Map<String, String> readParametersFromHdfs(FileSystem fs, Path previousIntermediateOutputLocationPath,
+                                                             int iteration) {
+        Map<String, String> splitToParameters = new HashMap<String, String>();
+        try {
+            splitToParameters = new HashMap<String, String>();
+            if (iteration > 0 && fs.exists(previousIntermediateOutputLocationPath)) {
+                FileStatus[] fileStatuses = fs.listStatus(previousIntermediateOutputLocationPath);
+                for (FileStatus fileStatus : fileStatuses) {
+                    Path thisFilePath = fileStatus.getPath();
+                    if (!thisFilePath.getName().contains("_SUCCESS") && !thisFilePath.getName().contains("_logs")) {
+                        FSDataInputStream in = fs.open(thisFilePath);
+                        int inputSize = getFileLength(fs, thisFilePath);
+                        if (inputSize > 0) {
+                            String value = fsDataInputStreamToString(in, inputSize);
+                            Map<String, String> additionalSplitToParameters = jsonToMap(value);
+                            splitToParameters.putAll(additionalSplitToParameters);
+                        }
+                    }
+                }
+            }
+        } catch (IOException e) {
+            LOG.log(Level.FINE, e.toString());
+        }
+        return splitToParameters;
     }
 }

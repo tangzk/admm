@@ -28,13 +28,13 @@ public class LogisticL2DifferentiableFunction implements IDifferentiableFunction
 
     @Override
     public double evaluate(double[] x) {
-        double result = evaluateObjectivePrimal(x);
+        double result = evaluatePrimalObjective(x);
         result += evaluateObjectiveDualPenalty(x);
 
         return result;
     }
 
-    public double evaluateObjectivePrimal(double[] x) {
+    public double evaluatePrimalObjective(double[] x) {
         double result = 0.0;
         for (int row = 0; row < m; row++) {
             double ax = 0;
@@ -46,6 +46,7 @@ public class LogisticL2DifferentiableFunction implements IDifferentiableFunction
             double thisLoopResult = Math.log(1.0 + Math.exp(-axb));
             result += thisLoopResult;
         }
+        result /= m;
         return result;
     }
 

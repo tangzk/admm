@@ -23,11 +23,11 @@ public class AdmmOptimizerDriverArgumentsTest {
         new CmdLineParser(subject).parseArgument(
                 "-outputPath",
                 OUTPUT_PATH.toString(),
-                "-inputPath",
+                "-signalPath",
                 SIGNAL_PATH);
 
         // assert
-        assertEquals(SIGNAL_PATH, subject.getInputPath());
+        assertEquals(SIGNAL_PATH, subject.getSignalPath());
 
         // verify
     }
@@ -45,7 +45,7 @@ public class AdmmOptimizerDriverArgumentsTest {
         new CmdLineParser(subject).parseArgument(
                 "-outputPath",
                 OUTPUT_PATH.toString(),
-                "-inputPath",
+                "-signalPath",
                 SIGNAL_PATH,
                 "-iterationsMaximum",
                 iterationsMaximum.toString());
@@ -69,7 +69,7 @@ public class AdmmOptimizerDriverArgumentsTest {
         new CmdLineParser(subject).parseArgument(
                 "-outputPath",
                 OUTPUT_PATH.toString(),
-                "-inputPath",
+                "-signalPath",
                 SIGNAL_PATH,
                 "-regularizationFactor",
                 regularizationFactor.toString());
@@ -93,7 +93,7 @@ public class AdmmOptimizerDriverArgumentsTest {
         new CmdLineParser(subject).parseArgument(
                 "-outputPath",
                 OUTPUT_PATH.toString(),
-                "-inputPath",
+                "-signalPath",
                 SIGNAL_PATH,
                 "-addIntercept");
 
@@ -116,7 +116,7 @@ public class AdmmOptimizerDriverArgumentsTest {
         new CmdLineParser(subject).parseArgument(
                 "-outputPath",
                 OUTPUT_PATH.toString(),
-                "-inputPath",
+                "-signalPath",
                 SIGNAL_PATH,
                 "-regularizeIntercept");
 
@@ -139,7 +139,7 @@ public class AdmmOptimizerDriverArgumentsTest {
         new CmdLineParser(subject).parseArgument(
                 "-outputPath",
                 OUTPUT_PATH.toString(),
-                "-inputPath",
+                "-signalPath",
                 SIGNAL_PATH,
                 "-columnsToExclude",
                 columnsToExclude);
