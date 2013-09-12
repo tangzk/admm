@@ -1,7 +1,7 @@
 ## ADMM
 
 ADMM is a Hadoop Map Reduce implementation of the Alternating Direction Method
-of Multipliers (ADMM) algorithm [1].
+of Multipliers (ADMM) algorithm [[1]](http://www.stanford.edu/~boyd/papers/admm_distr_stats.html).
 
 ADMM is a generic optimization algorithm.  This implementation includes a
 logistic regression objective function, however it can be extended to use other
@@ -18,8 +18,6 @@ hadoop jar build/libs/admm.jar com.intentmedia.admm.AdmmOptimizerDriver \
 -inputPath src/test/java/com/intentmedia/admm/files/logreg_features \
 -outputPath output
 ```
-
-[1] http://www.stanford.edu/~boyd/papers/admm_distr_stats.html
 
 ### Dependencies
 
