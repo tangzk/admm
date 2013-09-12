@@ -17,13 +17,16 @@ import java.net.URI;
 
 public class AdmmOptimizerDriver extends Configured implements Tool {
 
-    public static final String BETAS_PATH = "betas";
     private static final int DEFAULT_ADMM_ITERATIONS_MAX = 2;
     private static final float DEFAULT_REGULARIZATION_FACTOR = 0.000001f;
     private static final String S3_ITERATION_FOLDER_NAME = "iteration_";
     private static final String S3_FINAL_ITERATION_FOLDER_NAME = S3_ITERATION_FOLDER_NAME + "final";
     private static final String S3_STANDARD_ERROR_FOLDER_NAME = "standard-error";
     private static final String S3_BETAS_FOLDER_NAME = "betas";
+
+    public static void main(String[] args) throws Exception {
+        ToolRunner.run(new Configuration(), new AdmmOptimizerDriver(), args);
+    }
 
     @Override
     public int run(String[] args) throws Exception {
@@ -63,7 +66,7 @@ public class AdmmOptimizerDriver extends Configured implements Tool {
             String s3IterationFolderName = getS3IterationFolderName(isFinalIteration, iterationNumber);
             printResultsToS3(conf, currentHdfsResultsPath, finalOutputBaseUrl, new AdmmResultWriterIteration(), s3IterationFolderName);
 
-            if(isFinalIteration) {
+            if (isFinalIteration) {
                 printResultsToS3(conf, currentHdfsResultsPath, finalOutputBaseUrl, new AdmmResultWriterBetas(),
                         S3_BETAS_FOLDER_NAME);
                 JobConf stdErrConf = new JobConf(getConf(), AdmmOptimizerDriver.class);
@@ -178,9 +181,5 @@ public class AdmmOptimizerDriver extends Configured implements Tool {
 
     private boolean convergedOrMaxed(long curStatus, long preStatus, int iterationNumber, int iterationsMaximum) {
         return curStatus <= preStatus || iterationNumber >= iterationsMaximum;
-    }
-
-    public static void main(String[] args) throws Exception {
-        ToolRunner.run(new Configuration(), new AdmmOptimizerDriver(), args);
     }
 }
