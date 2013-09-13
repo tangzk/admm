@@ -10,10 +10,13 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.*;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
+import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 public class AdmmOptimizerDriver extends Configured implements Tool {
 
@@ -29,9 +32,9 @@ public class AdmmOptimizerDriver extends Configured implements Tool {
     }
 
     @Override
-    public int run(String[] args) throws Exception {
+    public int run(String[] args) throws IOException, CmdLineException {
         AdmmOptimizerDriverArguments admmOptimizerDriverArguments = new AdmmOptimizerDriverArguments();
-        new CmdLineParser(admmOptimizerDriverArguments).parseArgument(args);
+        parseArgs(args, admmOptimizerDriverArguments);
 
         String signalDataLocation = admmOptimizerDriverArguments.getSignalPath();
         String intermediateHdfsBaseString = "/tmp";
@@ -88,6 +91,19 @@ public class AdmmOptimizerDriver extends Configured implements Tool {
         }
 
         return 0;
+    }
+
+    private void parseArgs(String[] args, AdmmOptimizerDriverArguments admmOptimizerDriverArguments) throws CmdLineException {
+        ArrayList<String> argsList = new ArrayList<String>(Arrays.asList(args));
+
+        for (int i = 0; i < args.length; i++) {
+            if (i % 2 == 0 && !AdmmOptimizerDriverArguments.VALID_ARGUMENTS.contains(args[i])) {
+                argsList.remove(args[i]);
+                argsList.remove(args[i + 1]);
+            }
+        }
+
+        new CmdLineParser(admmOptimizerDriverArguments).parseArgument(argsList.toArray(new String[argsList.size()]));
     }
 
     private String getS3IterationFolderName(boolean isFinalIteration, int iterationNumber) {

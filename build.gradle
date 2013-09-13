@@ -18,7 +18,7 @@ dependencies {
     compile group: 'org.apache.hadoop', name: 'hadoop-core', version: '0.20.2-CDH3B4'
     compile group: 'org.codehaus.jackson', name: 'jackson-mapper-asl', version:'1.9.12'
     compile group: 'org.kohsuke.jetbrains', name: 'annotations', version:'9.0'
-    compile group: 'org.kohsuke.args4j', name: 'args4j-maven-plugin', version:'2.0.23'
+    compile group: 'args4j', name: 'args4j', version:'2.0.12'
 }
 
 sourceCompatibility = 1.6

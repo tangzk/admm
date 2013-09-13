@@ -4,15 +4,21 @@ import org.junit.Test;
 
 public class AdmmOptimizerDriverTest {
 
-    @Test
-    public void testWriteResultsToOutput() throws Exception {
+    @Test(expected = NullPointerException.class)
+    public void testIgnoresExtraArguments() throws Exception {
         // initialize inputs
-        String[] args = {"arg"};
+        String[] args = {"-outputPath", "outputPath",
+                "-iterationsMaximum", "0",
+                "-stepOutputBaseUrl", "abc",
+                "-signalPath", "signalPath",
+                "-regularizationFactor", "0.000001f"};
         // initialize mocks
         // initialize subject
         AdmmOptimizerDriver subject = new AdmmOptimizerDriver();
-        // TODO: finish test
+
         // invoke target
+        subject.run(args);
+
         // assert
         // verify
     }
