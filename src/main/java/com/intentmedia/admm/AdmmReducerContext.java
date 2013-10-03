@@ -34,6 +34,15 @@ public class AdmmReducerContext implements Writable {
     @JsonProperty("lambdaValue")
     private double lambdaValue;
 
+    @JsonProperty("mapStartTime")
+    private long mapStartTime;
+
+    @JsonProperty("optimizationStartTime")
+    private long optimizationStartTime;
+
+    @JsonProperty("mapEndTime")
+    private long mapEndTime;
+
     public AdmmReducerContext(double[] uInitial, double[] xInitial, double[] xUpdated, double[] zInitial,
                               double primalObjectiveValue, double rho, double lambdaValue) {
         this.uInitial = uInitial;
@@ -43,6 +52,21 @@ public class AdmmReducerContext implements Writable {
         this.primalObjectiveValue = primalObjectiveValue;
         this.rho = rho;
         this.lambdaValue = lambdaValue;
+    }
+
+    public AdmmReducerContext(double[] uInitial, double[] xInitial, double[] xUpdated, double[] zInitial,
+                              double primalObjectiveValue, double rho, double lambdaValue,
+                              long mapStartTime, long optimizationStartTime, long mapEndTime) {
+        this.uInitial = uInitial;
+        this.xInitial = xInitial;
+        this.xUpdated = xUpdated;
+        this.zInitial = zInitial;
+        this.primalObjectiveValue = primalObjectiveValue;
+        this.rho = rho;
+        this.lambdaValue = lambdaValue;
+        this.mapStartTime = mapStartTime;
+        this.optimizationStartTime = optimizationStartTime;
+        this.mapEndTime = mapEndTime;
     }
 
     public AdmmReducerContext() {
@@ -104,5 +128,20 @@ public class AdmmReducerContext implements Writable {
     @JsonProperty("lambdaValue")
     public double getLambdaValue() {
         return lambdaValue;
+    }
+
+    @JsonProperty("mapStartTime")
+    public long getMapStartTime() {
+        return mapStartTime;
+    }
+
+    @JsonProperty("optimizationStartTime")
+    public long getOptimizationStartTime() {
+        return optimizationStartTime;
+    }
+
+    @JsonProperty("mapEndTime")
+    public long getMapEndTime() {
+        return mapEndTime;
     }
 }

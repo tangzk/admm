@@ -27,6 +27,9 @@ public class AdmmReducerContextGroup {
     private final double rNorm;
     private final double sNorm;
     private final double primalObjectiveValue;
+    private final long mapStartTime;
+    private final long optimizationStartTime;
+    private final long mapEndTime;
 
     public AdmmReducerContextGroup(Iterator<Text> mapperResults, int numberOfMappers, Logger logger, int iteration)
             throws IOException {
@@ -38,6 +41,9 @@ public class AdmmReducerContextGroup {
 
         rho = context.getRho();
         lambdaValue = context.getLambdaValue();
+        mapStartTime = context.getMapStartTime();
+        mapEndTime = context.getMapEndTime();
+        optimizationStartTime = context.getOptimizationStartTime();
         zInitial = context.getZInitial();
         uInitial = new double[numberOfMappers][];
         xInitial = new double[numberOfMappers][];
@@ -190,5 +196,17 @@ public class AdmmReducerContextGroup {
 
     public double getPrimalObjectiveValue() {
         return primalObjectiveValue;
+    }
+
+    public long getMapStartTime() {
+        return mapStartTime;
+    }
+
+    public long getOptimizationStartTime() {
+        return optimizationStartTime;
+    }
+
+    public long getMapEndTime() {
+        return mapEndTime;
     }
 }

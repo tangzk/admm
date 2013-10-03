@@ -39,6 +39,10 @@ public class AdmmIterationMapper extends MapReduceBase
     private String previousIntermediateOutputLocation;
     private Path previousIntermediateOutputLocationPath;
 
+    private long mapStartTime;
+    private long optimizationStartTime;
+    private long mapEndTime;
+
     @Override
     public void configure(JobConf job) {
         iteration = Integer.parseInt(job.get("iteration.number"));
@@ -67,6 +71,7 @@ public class AdmmIterationMapper extends MapReduceBase
     @Override
     public void map(LongWritable key, Text value, OutputCollector<IntWritable, Text> output, Reporter reporter)
             throws IOException {
+        mapStartTime = System.nanoTime();
         FileSplit split = (FileSplit) reporter.getInputSplit();
         String splitId = key.get() + "@" + split.getPath();
         splitId = removeIpFromHdfsFileName(splitId);
@@ -80,6 +85,7 @@ public class AdmmIterationMapper extends MapReduceBase
         else {
             mapperContext = assembleMapperContextFromCache(inputSplitData, splitId);
         }
+        optimizationStartTime = System.nanoTime();
         AdmmReducerContext reducerContext = localMapperOptimization(mapperContext);
 
         LOG.info("Iteration " + iteration + "Mapper outputting splitId " + splitId);
@@ -96,13 +102,18 @@ public class AdmmIterationMapper extends MapReduceBase
         IOptimizer.Ctx optimizationContext = new IOptimizer.Ctx(context.getXInitial());
         bfgs.minimize(myFunction, optimizationContext);
         double primalObjectiveValue = myFunction.evaluatePrimalObjective(optimizationContext.m_optimumX);
+        mapEndTime = System.nanoTime();
+
         return new AdmmReducerContext(context.getUInitial(),
                 context.getXInitial(),
                 optimizationContext.m_optimumX,
                 context.getZInitial(),
                 primalObjectiveValue,
                 context.getRho(),
-                regularizationFactor);
+                regularizationFactor,
+                mapStartTime,
+                optimizationStartTime,
+                mapEndTime);
     }
 
     private AdmmMapperContext assembleMapperContextFromCache(double[][] inputSplitData, String splitId) throws IOException {

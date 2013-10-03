@@ -23,6 +23,10 @@ public class AdmmIterationReducer extends MapReduceBase implements Reducer<IntWr
     private int numberOfMappers;
     private boolean regularizeIntercept;
 
+    private long reduceStartTime;
+    private long firstReduceCompleted;
+    private long lastReduceCompleted;
+
     @Override
     public void configure(JobConf job) {
         super.configure(job);
@@ -34,7 +38,7 @@ public class AdmmIterationReducer extends MapReduceBase implements Reducer<IntWr
     @Override
     public void reduce(IntWritable key, Iterator<Text> values, OutputCollector<IntWritable, Text> output, Reporter reporter)
             throws IOException {
-
+        reduceStartTime = System.nanoTime();
         AdmmReducerContextGroup context = new AdmmReducerContextGroup(values, numberOfMappers, LOG, iteration);
         setOutputMapperValues(context);
         output.collect(ZERO, new Text(mapToJson(outputMap)));
@@ -50,12 +54,19 @@ public class AdmmIterationReducer extends MapReduceBase implements Reducer<IntWr
         String[] splitIds = context.getSplitIds();
 
         for (int mapperNumber = 0; mapperNumber < context.getNumberOfMappers(); mapperNumber++) {
+            if(mapperNumber == 0) {
+                firstReduceCompleted = System.nanoTime();
+            }
             double[] uUpdated = getUUpdated(context, mapperNumber, zUpdated);
+            lastReduceCompleted = System.nanoTime();
             AdmmMapperContext admmMapperContext =
                     new AdmmMapperContext(null, null, uUpdated, xUpdated[mapperNumber], zUpdated,
                             context.getRho() * context.getRhoMultiplier(),
                             context.getLambda(), context.getPrimalObjectiveValue(),
-                            context.getRNorm(), context.getSNorm());
+                            context.getRNorm(), context.getSNorm(),
+                            context.getMapStartTime(), context.getOptimizationStartTime(),
+                            context.getMapEndTime(), reduceStartTime,
+                            firstReduceCompleted, lastReduceCompleted);
             String currentSplitId = splitIds[mapperNumber];
             outputMap.put(currentSplitId, admmMapperContextToJson(admmMapperContext));
             LOG.info("Iteration " + iteration + " Reducer Setting splitID " + currentSplitId);
