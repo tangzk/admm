@@ -1,7 +1,4 @@
-package com.intentmedia.admm;
-
-import com.intentmedia.bfgs.optimize.IDifferentiableFunction;
-import com.intentmedia.bfgs.optimize.IFunctionGradient;
+package com.intentmedia.bfgs.optimize;
 
 public class LogisticL2DifferentiableFunction implements IDifferentiableFunction {
     private double[][] a; // m by n matrix of features

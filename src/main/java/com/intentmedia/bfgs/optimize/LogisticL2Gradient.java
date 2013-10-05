@@ -1,4 +1,4 @@
-package com.intentmedia.admm;
+package com.intentmedia.bfgs.optimize;
 
 import com.intentmedia.bfgs.optimize.IFunctionGradient;
 

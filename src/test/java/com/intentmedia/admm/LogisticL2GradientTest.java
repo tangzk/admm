@@ -1,6 +1,7 @@
 package com.intentmedia.admm;
 
 import com.intentmedia.admm.helpers.BFGSTestHelper;
+import com.intentmedia.bfgs.optimize.LogisticL2Gradient;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;

@@ -3,6 +3,7 @@ package com.intentmedia.admm;
 import com.intentmedia.admm.helpers.BFGSTestHelper;
 import com.intentmedia.bfgs.optimize.BFGS;
 import com.intentmedia.bfgs.optimize.IOptimizer;
+import com.intentmedia.bfgs.optimize.LogisticL2DifferentiableFunction;
 import com.intentmedia.bfgs.optimize.OptimizerParameters;
 import org.junit.Test;
 

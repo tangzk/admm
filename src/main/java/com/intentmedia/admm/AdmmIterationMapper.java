@@ -2,6 +2,7 @@ package com.intentmedia.admm;
 
 import com.intentmedia.bfgs.optimize.BFGS;
 import com.intentmedia.bfgs.optimize.IOptimizer;
+import com.intentmedia.bfgs.optimize.LogisticL2DifferentiableFunction;
 import com.intentmedia.bfgs.optimize.OptimizerParameters;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
