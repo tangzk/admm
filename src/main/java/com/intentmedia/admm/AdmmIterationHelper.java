@@ -91,7 +91,7 @@ public final class AdmmIterationHelper {
                 data[i][0] = 1;
             }
             for (int j = 0; j < numColumns; j++) {
-                // request_id, requested_at_iso, s1, s2, ..., y
+                // s1, s2, ..., y
                 newColumnArrayIndex = columnArray[j];
                 try {
                     data[i][j + interceptOffset] = Double.parseDouble(elements[newColumnArrayIndex]);
@@ -129,7 +129,7 @@ public final class AdmmIterationHelper {
 
     public static String removeIpFromHdfsFileName(String fileString) {
         if (fileString.contains("hdfs")) {
-            int indexOfSecondForwardSlash = fileString.indexOf("/") + 1; //add 1 to get index of second forward slash
+            int indexOfSecondForwardSlash = fileString.indexOf("/") + 1; // add 1 to get index of second forward slash
             int indexOfThirdForwardSlash = fileString.indexOf("/", indexOfSecondForwardSlash + 1);
 
             return fileString.substring(0, indexOfSecondForwardSlash) + fileString
