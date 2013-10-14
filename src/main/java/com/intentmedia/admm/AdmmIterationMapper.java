@@ -25,7 +25,7 @@ public class AdmmIterationMapper extends MapReduceBase
     private static final IntWritable ZERO = new IntWritable(0);
     private static final Logger LOG = Logger.getLogger(AdmmIterationMapper.class.getName());
     private static final float DEFAULT_REGULARIZATION_FACTOR = 0.000001f;
-    private static final float DEFAULT_RHO = 1.0f;
+    private static final float DEFAULT_RHO = 0.1f;
 
     private int iteration;
     private FileSystem fs;
